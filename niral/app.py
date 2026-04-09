@@ -1,19 +1,16 @@
-"""
-app.py — Kanyakumari Tourism Portal Backend
-Run: python app.py
-Open: http://localhost:5000
-"""
-
 from flask import Flask, render_template, request, redirect, jsonify
 from datetime import datetime
 import uuid
 import json
 import socket
+import os
 
 from data import ATTRACTIONS, ACCOMMODATIONS, TRAVEL_TIPS
 
 app = Flask(__name__)
-BOOKINGS = []  # In-memory; swap with DB in production
+app.config['JSON_SORT_KEYS'] = False
+
+BOOKINGS = []  # Temporary storage
 
 
 # ── Helpers ──────────────────────────────────────────────────
@@ -143,7 +140,9 @@ def book():
             nights = max((co - ci).days, 1)
         except Exception:
             nights = 1
+
         total = nights * acc["price"]
+
         booking = {
             "id": str(uuid.uuid4())[:8].upper(),
             "guest_name": request.form.get("name", ""),
@@ -162,6 +161,7 @@ def book():
             "status": "Confirmed",
             "booked_at": datetime.now().strftime("%d %b %Y, %I:%M %p"),
         }
+
         BOOKINGS.append(booking)
         return redirect(f"/confirmation/{booking['id']}")
 
@@ -174,58 +174,20 @@ def confirmation(booking_id):
     booking = next((b for b in BOOKINGS if b["id"] == booking_id), None)
     if not booking:
         return "<h2>Booking not found.</h2><a href='/'>← Home</a>", 404
+
     acc = next((a for a in ACCOMMODATIONS if a["id"] == booking["accommodation_id"]), {})
     return render_template("confirmation.html", booking=booking, acc=acc)
 
 
-# ── REST API ──────────────────────────────────────────────────
+# ── API ──────────────────────────────────────────────────────
 @app.route("/api/attractions")
 def api_attractions():
-    cat = request.args.get("category")
-    data = [a for a in ATTRACTIONS if a["category"] == cat] if cat else ATTRACTIONS
-    return jsonify({"count": len(data), "attractions": data})
+    return jsonify({"count": len(ATTRACTIONS), "attractions": ATTRACTIONS})
 
 
 @app.route("/api/accommodations")
 def api_accommodations():
-    acc_type = request.args.get("type")
-    data = [a for a in ACCOMMODATIONS if a["type"] == acc_type] if acc_type else ACCOMMODATIONS
-    return jsonify({"count": len(data), "accommodations": data})
-
-
-@app.route("/api/book", methods=["POST"])
-def api_book():
-    body = request.get_json(force=True)
-    acc_id = body.get("accommodation_id", 1)
-    acc = next((a for a in ACCOMMODATIONS if a["id"] == acc_id), None)
-    if not acc:
-        return jsonify({"error": "Accommodation not found"}), 404
-    try:
-        ci = datetime.strptime(body["check_in"], "%Y-%m-%d")
-        co = datetime.strptime(body["check_out"], "%Y-%m-%d")
-        nights = max((co - ci).days, 1)
-    except Exception:
-        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
-
-    booking = {
-        "id": str(uuid.uuid4())[:8].upper(),
-        "guest_name": body.get("name"),
-        "email": body.get("email"),
-        "phone": body.get("phone"),
-        "accommodation_id": acc_id,
-        "accommodation": acc["name"],
-        "acc_type": acc["type"],
-        "check_in": body["check_in"],
-        "check_out": body["check_out"],
-        "guests": body.get("guests", 2),
-        "nights": nights,
-        "price_per_night": acc["price"],
-        "total": nights * acc["price"],
-        "status": "Confirmed",
-        "booked_at": datetime.now().isoformat(),
-    }
-    BOOKINGS.append(booking)
-    return jsonify({"success": True, "booking": booking}), 201
+    return jsonify({"count": len(ACCOMMODATIONS), "accommodations": ACCOMMODATIONS})
 
 
 @app.route("/api/bookings")
@@ -240,15 +202,5 @@ def api_tips():
 
 # ── Entry Point ───────────────────────────────────────────────
 if __name__ == "__main__":
-    PORT = 5000
-    local_ip = get_local_ip()
-    print("\n+----------------------------------------------------------+")
-    print("|      KANYAKUMARI TOURISM PORTAL — Starting Up...        |")
-    print("+----------------------------------------------------------+")
-    print(f"|  Local:    http://localhost:{PORT}                          |")
-    print(f"|  Network:  http://{local_ip}:{PORT}                   |")
-    print("+----------------------------------------------------------+")
-    print("|  Pages: /  /attractions  /accommodations  /villas       |")
-    print("|  API:   /api/attractions  /api/accommodations            |")
-    print("+----------------------------------------------------------+\n")
-    app.run(debug=True, port=PORT, host="0.0.0.0")
+    PORT = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=PORT, debug=False)
