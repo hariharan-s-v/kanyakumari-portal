@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Tribal & Villa Tourism — Kanyakumari{% endblock %}
+
+{% block content %}
+<div class="tribal-hero">
+  <h1>🌿 Villas & Community Stays</h1>
+  <p>The Kani, Muduvar, and Kadar tribes have stewarded Kanyakumari's forests for generations.
+     Every tribal booking is an act of cultural preservation and direct economic empowerment.</p>
+  <div class="impact-bar">
+    <div class="impact-item"><div class="impact-num">3</div><div class="impact-label">Tribal Communities</div></div>
+    <div class="impact-item"><div class="impact-num">100%</div><div class="impact-label">Revenue to Tribe</div></div>
+    <div class="impact-item"><div class="impact-num">{{ villa_stays|length }}</div><div class="impact-label">Verified Stays</div></div>
+    <div class="impact-item"><div class="impact-num">400+</div><div class="impact-label">Families Supported</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">
+    <span class="section-label" style="color:var(--rust-light)">✦ Villas</span>
+    <h2 class="section-title">Stay with <em style="color:var(--rust-light)">the Community</em></h2>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:22px">
+    {% for a in villa_stays %}
+    {% set stars_str = "★" * a.stars + "☆" * (5 - a.stars) %}
+    <div class="acc-card">
+      <div class="acc-side villa">
+        <div class="villa-badge">🌿 VILLA</div>
+        <div class="acc-icon">{{ a.icon }}</div>
+        <div class="acc-stars">{{ stars_str }}</div>
+      </div>
+      <div class="acc-body">
+        <div class="acc-type villa-type">{{ a.type }}</div>
+        <div class="acc-name">{{ a.name }}</div>
+        <div class="acc-desc">{{ a.description }}</div>
+        <div class="amenities">{% for am in a.amenities %}<span class="amenity">{{ am }}</span>{% endfor %}</div>
+        <div class="acc-footer">
+          <div>
+            <div class="acc-price">₹{{ a.price|commas }}<span>/night</span></div>
+            <div class="acc-avail">✓ {{ a.available }} rooms available</div>
+          </div>
+          <a href="/stay/{{ a.id }}" class="btn-book villa-btn">Book Villa Stay →</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div style="background:var(--surface-2)">
+<div class="section">
+  <div class="section-header">
+    <span class="section-label" style="color:var(--rust-light)">✦ Villa Heritage Sites</span>
+    <h2 class="section-title">Tribal <em style="color:var(--rust-light)">Attractions</em></h2>
+  </div>
+  <div class="cards-grid">
+    {% for a in villa_spots %}
+    <div class="card">
+      <div class="card-icon-banner" style="{% if a.image %}background: url('{{ a.image }}') {{ a.get('image_pos', 'center') }}/cover;{% else %}background:linear-gradient(135deg,#3d2010,#5c7a3a){% endif %};position:relative;">
+        {% if not a.image %}<span style="font-size:3.5rem">{{ a.icon }}</span>{% endif %}
+      </div>
+      <div class="card-body">
+        <div class="card-category">{{ a.category }}</div>
+        <div class="card-title">{{ a.name }}</div>
+        <div class="card-desc">{{ a.description[:140] }}…</div>
+        <div class="card-meta">
+          <span class="meta-tag">⏰ {{ a.timings[:15] }}</span>
+          <span class="rating">⭐ {{ a.rating }}</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+</div>
+{% endblock %}

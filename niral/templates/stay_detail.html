@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}{{ acc.name }} — Kanyakumari Tourism{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block content %}
+{% if acc.villa %}
+{% set hero_bg = "linear-gradient(135deg,#3d1f0d,#5c7a3a)" %}
+{% else %}
+{% set hero_bg = "linear-gradient(135deg,#0a3d52,#1a9a8e)" %}
+{% endif %}
+
+<div class="stay-layout">
+
+  <!-- LEFT PANEL -->
+  <div class="stay-left">
+
+    <div class="stay-hero" style="background:{{ hero_bg }}">
+      <a href="/accommodations" class="stay-back">← Back to all Stays</a>
+      <div class="stay-hero-row">
+        <span class="stay-big-icon">{{ acc.icon }}</span>
+        <div class="stay-hero-info">
+          <span class="stay-type-badge">{% if acc.villa %}🌿 VILLA{% else %}{{ acc.type }}{% endif %}</span>
+          <h1 class="stay-name">{{ acc.name }}</h1>
+          <div class="stay-stars">{{ stars_str }} &nbsp;<span style="font-family:'Sora',sans-serif;font-size:.9rem;opacity:.8">{{ acc.stars }}.0 / 5.0</span></div>
+          <p class="stay-desc-hero">{{ acc.description }}</p>
+          <div class="stay-amenity-row">
+            {% for am in acc.amenities %}<span class="stay-amenity">{{ am }}</span>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if acc.villa %}
+    <div class="villa-notice">
+      <span style="font-size:1.4rem">🌿</span>
+      <div><strong>Community Villa Stay</strong> — 100% of your payment goes directly to the local host family. No middlemen. Your stay funds education, healthcare, and forest conservation.</div>
+    </div>
+    {% endif %}
+
+    <div class="stay-quick-bar">
+      <div class="stay-quick-cell">
+        <div class="stay-quick-label">Price</div>
+        <div class="stay-quick-val">₹{{ acc.price|commas }}/night</div>
+      </div>
+      <div class="stay-quick-cell">
+        <div class="stay-quick-label">Stars</div>
+        <div class="stay-quick-val">{{ "★" * acc.stars }}</div>
+      </div>
+      <div class="stay-quick-cell">
+        <div class="stay-quick-label">Availability</div>
+        <div class="stay-quick-val avail">{{ acc.available }} rooms</div>
+      </div>
+      <div class="stay-quick-cell">
+        <div class="stay-quick-label">Contact</div>
+        <div class="stay-quick-val" style="font-size:.82rem">{{ acc.contact }}</div>
+      </div>
+    </div>
+
+    <div class="stay-tabs">
+      <div class="stay-tab active" onclick="switchStayTab('map',this)">🗺️ Map & Directions</div>
+      <div class="stay-tab" onclick="switchStayTab('attractions',this)">🏛️ Nearby Attractions</div>
+    </div>
+
+    <!-- MAP TAB -->
+    <div class="stay-tab-panel active" id="stay-tab-map">
+      <div id="stay-map"></div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#0d5c78"></div> This Stay</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1a9a8e"></div> Attractions</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2d5a27"></div> Other Stays</div>
+      </div>
+      <div class="dir-box">
+        <div class="dir-box-title">📍 How to reach <em style="color:var(--teal)">{{ acc.name }}</em></div>
+        <div class="dir-row"><span class="dir-icon">📌</span><div class="dir-text"><strong>Address:</strong> {{ acc.address }}</div></div>
+        <div class="dir-row"><span class="dir-icon">🚂</span><div class="dir-text"><strong>By Train:</strong> Kanyakumari Railway Station (KZT). Auto-rickshaw from station: Rs.60–120.</div></div>
+        <div class="dir-row"><span class="dir-icon">✈️</span><div class="dir-text"><strong>By Flight:</strong> Trivandrum International Airport (TRV) — 87 km, ~2 hours. Taxi Rs.1,200–1,500.</div></div>
+        <div class="dir-row"><span class="dir-icon">🚌</span><div class="dir-text"><strong>By Bus:</strong> TNSTC/KSRTC buses from Madurai (4 hrs), Trivandrum (1.5 hrs), Chennai (14 hrs).</div></div>
+        <div class="dir-row"><span class="dir-icon">🚗</span><div class="dir-text"><strong>By Road:</strong> NH-44 terminates at Kanyakumari. NH-66 connects from Kerala side.</div></div>
+        <a class="gmaps-link"
+           href="https://www.google.com/maps/dir/?api=1&destination={{ acc.lat }},{{ acc.lng }}"
+           target="_blank">📍 Get Live Directions in Google Maps</a>
+      </div>
+    </div>
+
+    <!-- NEARBY ATTRACTIONS TAB -->
+    <div class="stay-tab-panel" id="stay-tab-attractions">
+      <p style="color:var(--text-2);margin-bottom:20px;font-size:.9rem">Top attractions within Kanyakumari district — all reachable within 30 minutes from this stay.</p>
+      {% for a in attractions %}
+      <a href="/attraction/{{ a.id }}" class="nearby-att-card">
+        <span class="nearby-att-icon">{{ a.icon }}</span>
+        <div>
+          <div class="nearby-att-name">{{ a.name }}</div>
+          <div class="nearby-att-meta">⭐ {{ a.rating }} · {{ a.timings[:12] }}</div>
+        </div>
+      </a>
+      {% endfor %}
+      <div style="text-align:center;margin-top:16px">
+        <a href="/attractions" class="btn-primary">View All Attractions →</a>
+      </div>
+    </div>
+
+  </div><!-- end stay-left -->
+
+  <!-- RIGHT — BOOKING PANEL -->
+  <div class="stay-right">
+    <div class="booking-panel-header" style="background:{{ hero_bg }}">
+      <h3>Book {{ acc.name }}</h3>
+      <div class="bp-sub">{{ acc.type }} · Kanyakumari, Tamil Nadu</div>
+      <div class="bp-price-row">
+        <span class="bp-price">₹{{ acc.price|commas }}</span>
+        <span class="bp-per">/ night</span>
+      </div>
+      <div class="bp-avail">✓ {{ acc.available }} rooms currently available</div>
+    </div>
+
+    <div class="booking-panel-body">
+      <div class="booking-links-title">Official Booking Options</div>
+
+      <a href="{{ acc.booking_url }}" target="_blank" class="official-booking-btn primary">
+        <span class="obb-icon">🔗</span>
+        <div class="obb-text">
+          <div class="obb-platform">Official Portal</div>
+          <div class="obb-action">Book on {{ acc.booking_platform }}</div>
+        </div>
+        <span class="obb-arrow">↗</span>
+      </a>
+
+      <a href="https://www.makemytrip.com/hotels/hotel-listing/?city=CTKYK" target="_blank" class="official-booking-btn">
+        <span class="obb-icon">✈️</span>
+        <div class="obb-text"><div class="obb-platform">Travel Portal</div><div class="obb-action">Check on MakeMyTrip</div></div>
+        <span class="obb-arrow">↗</span>
+      </a>
+
+      <a href="https://www.goibibo.com/hotels/hotels-in-kanyakumari/" target="_blank" class="official-booking-btn">
+        <span class="obb-icon">🏨</span>
+        <div class="obb-text"><div class="obb-platform">Travel Portal</div><div class="obb-action">Check on Goibibo</div></div>
+        <span class="obb-arrow">↗</span>
+      </a>
+
+      <a href="https://www.booking.com/searchresults.html?ss=Kanyakumari" target="_blank" class="official-booking-btn">
+        <span class="obb-icon">🌐</span>
+        <div class="obb-text"><div class="obb-platform">International Portal</div><div class="obb-action">Check on Booking.com</div></div>
+        <span class="obb-arrow">↗</span>
+      </a>
+
+      <hr class="divider">
+
+      <div class="booking-links-title">Or Book Directly via Portal</div>
+      <a href="/book?id={{ acc.id }}" class="portal-book-btn {% if acc.villa %}villa-btn{% endif %}">
+        ✓ Book Directly — Instant Confirmation
+      </a>
+
+      <div class="contact-row">
+        📞 Call property: <a href="tel:{{ acc.contact }}">{{ acc.contact }}</a>
+      </div>
+
+      <div style="margin-top:16px;padding:14px;background:var(--surface);border-radius:8px;font-size:.8rem;color:var(--text-2);line-height:1.6">
+        <strong style="color:var(--text)">ℹ️ Tips:</strong><br>
+        Book 2–3 weeks ahead for peak season (Oct–Mar).
+        {% if acc.villa %}Villa stays require 50% advance — pay directly to host.
+        {% else %}Free cancellation available on most platforms up to 24 hrs before arrival.{% endif %}
+      </div>
+    </div>
+  </div>
+
+</div><!-- end stay-layout -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const STAY_LAT = {{ acc.lat }};
+  const STAY_LNG = {{ acc.lng }};
+  const STAY_NAME = {{ acc.name | tojson }};
+  const STAY_ICON = {{ acc.icon | tojson }};
+  const ATT_MARKERS = {{ att_markers_json | safe }};
+  const OTHER_STAYS = {{ other_stays_json | safe }};
+
+  function initStayMap() {
+    const map = L.map('stay-map').setView([STAY_LAT, STAY_LNG], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 18
+    }).addTo(map);
+
+    // This stay — gold-bordered marker
+    const mainIcon = L.divIcon({
+      html: `<div style="background:#0a3d52;border:3px solid #d4a843;border-radius:10px;width:54px;height:54px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;box-shadow:0 4px 18px rgba(0,0,0,.4)">${STAY_ICON}</div>`,
+      className:'', iconSize:[54,54], iconAnchor:[27,27]
+    });
+    L.marker([STAY_LAT, STAY_LNG], {icon: mainIcon}).addTo(map)
+      .bindPopup(`<b style="font-size:1rem">${STAY_NAME}</b><br><span style="color:#1a9a8e">You are viewing this stay</span><br><a href="https://www.google.com/maps/dir/?api=1&destination=${STAY_LAT},${STAY_LNG}" target="_blank" style="color:#0d5c78;font-weight:600">Get Directions →</a>`)
+      .openPopup();
+
+    // Attraction markers — teal circles
+    ATT_MARKERS.forEach(a => {
+      const icon = L.divIcon({
+        html: `<div style="background:rgba(26,154,142,.88);border:2px solid white;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,.25)">${a.icon}</div>`,
+        className:'', iconSize:[40,40], iconAnchor:[20,20]
+      });
+      L.marker([a.lat, a.lng], {icon}).addTo(map)
+        .bindPopup(`<b>${a.name}</b><br><a href="/attraction/${a.id}" style="color:#0d5c78;font-weight:600">View Attraction →</a>`);
+    });
+
+    // Other stays — green price badges
+    OTHER_STAYS.forEach(s => {
+      const sIcon = L.divIcon({
+        html: `<div style="background:${s.villa ? '#5c3317' : '#2d5a27'};border:2px solid white;border-radius:6px;padding:4px 8px;font-size:.68rem;font-weight:700;color:white;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25)">${s.icon} Rs.${s.price.toLocaleString()}</div>`,
+        className:'', iconAnchor:[0,0]
+      });
+      L.marker([s.lat, s.lng], {icon: sIcon}).addTo(map)
+        .bindPopup(`<b>${s.name}</b><br><span style="color:#6b7a8d;font-size:.82em">${s.type}</span><br><a href="/stay/${s.id}" style="color:#0d5c78;font-weight:600">View Stay →</a>`);
+    });
+  }
+
+  function switchStayTab(name, el) {
+    document.querySelectorAll('.stay-tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.stay-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('stay-tab-' + name).classList.add('active');
+    el.classList.add('active');
+  }
+
+  window.addEventListener('load', initStayMap);
+</script>
+{% endblock %}

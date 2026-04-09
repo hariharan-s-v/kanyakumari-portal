@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Kanyakumari Tourism — Land's End Portal{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-particles">
+    {% for i in range(18) %}
+    <div class="particle" style="left:{{ (i*37) % 100 }}%;width:{{ 8 + i%18 }}px;height:{{ 8 + i%18 }}px;animation-duration:{{ 10 + i*2 }}s;animation-delay:{{ "%.1f"|format(i*0.7) }}s"></div>
+    {% endfor %}
+  </div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      Tamil Nadu &nbsp;&middot;&nbsp; India's Southernmost Tip
+    </div>
+    <div class="hero-location">Where Three Seas Converge</div>
+    <h1>Welcome to<br><em>Kanyakumari</em></h1>
+    <p class="hero-desc">Stand at the very tip of India where the Bay of Bengal, Arabian Sea, and Indian Ocean meet in silence. Ancient heritage, emerald forests, and living village culture await you at Land's End.</p>
+    <div class="hero-actions">
+      <a href="#attractions" class="btn-primary">Explore Attractions</a>
+      <a href="/accommodations" class="btn-ghost">Find &amp; Book Stay</a>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ATTRACTIONS -->
+<div id="attractions">
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">✦ Must-Visit Places</span>
+    <h2 class="section-title">Top <em>Attractions</em></h2>
+    <p class="section-desc">From sea-rock memorials to ancient tribal caves — every corner of Kanyakumari tells a story.</p>
+  </div>
+  {% set color_map = {
+    "Heritage & Spiritual": "linear-gradient(135deg,#1a4a6b,#1a9a8e)",
+    "Monument":             "linear-gradient(135deg,#3d2b1f,#8b6914)",
+    "Nature":               "linear-gradient(135deg,#1a3a1a,#4a7c42)",
+    "Engineering & Nature": "linear-gradient(135deg,#1a2a4a,#2d6a8e)",
+    "Heritage":             "linear-gradient(135deg,#4a2a1a,#8b6914)",
+    "Nature & Wildlife":    "linear-gradient(135deg,#1a3a1a,#1a9a8e)",
+    "Tribal & Heritage":    "linear-gradient(135deg,#3d2010,#5c7a3a)"
+  } %}
+  <div class="cards-grid">
+    {% for a in attractions %}
+    {% set bg = color_map.get(a.category, "linear-gradient(135deg,#0a3d52,#1a9a8e)") %}
+    <a href="/attraction/{{ a.id }}" class="card" style="display:block">
+      <div class="card-icon-banner" style="{% if a.image %}background: url('{{ a.image }}') {{ a.get('image_pos', 'center') }}/cover;{% else %}background:{{ bg }};{% endif %}position:relative;">
+        {% if not a.image %}<span style="font-size:3.5rem">{{ a.icon }}</span>{% endif %}
+        <span style="position:absolute;bottom:10px;right:12px;background:rgba(255,255,255,.2);color:white;font-size:.7rem;padding:3px 10px;border-radius:12px;backdrop-filter:blur(4px)">Map & Stays →</span>
+      </div>
+      <div class="card-body">
+        <div class="card-category">{{ a.category }}</div>
+        <div class="card-title">{{ a.name }}</div>
+        <div class="card-desc">{{ a.description[:130] }}...</div>
+        <div class="card-meta">
+          {% if a.entry_fee == 0 %}<span class="meta-tag free">Free Entry</span>
+          {% else %}<span class="meta-tag">₹{{ a.entry_fee }} Entry</span>{% endif %}
+          <span class="meta-tag">⏰ {{ a.timings[:15] }}</span>
+          <span class="rating">⭐ {{ a.rating }}</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <div style="text-align:center;margin-top:36px">
+    <a href="/attractions" class="btn-primary">View All Attractions →</a>
+  </div>
+</div>
+</div>
+
+<!-- ACCOMMODATIONS -->
+<div id="accommodations" style="background:var(--surface-2)">
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">✦ Where to Stay</span>
+    <h2 class="section-title">Curated <em>Stays</em></h2>
+    <p class="section-desc">Hotels, eco-cottages, and tribal homestays — book verified accommodations that directly support local communities.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:20px">
+    {% for a in accommodations %}
+    {% set stars_str = "★" * a.stars + "☆" * (5 - a.stars) %}
+    <div class="acc-card">
+      <div class="acc-side {% if a.villa %}villa{% endif %}">
+        {% if a.villa %}<div class="villa-badge">🌿 VILLA</div>{% endif %}
+        <div class="acc-icon">{{ a.icon }}</div>
+        <div class="acc-stars">{{ stars_str }}</div>
+      </div>
+      <div class="acc-body">
+        <div class="acc-type {% if a.villa %}villa-type{% endif %}">{{ a.type }}</div>
+        <div class="acc-name">{{ a.name }}</div>
+        <div class="acc-desc">{{ a.description[:120] }}…</div>
+        <div class="amenities">
+          {% for am in a.amenities[:4] %}<span class="amenity">{{ am }}</span>{% endfor %}
+        </div>
+        <div class="acc-footer">
+          <div>
+            <div class="acc-price">₹{{ a.price|commas }}<span>/night</span></div>
+            <div class="acc-avail">✓ {{ a.available }} rooms available</div>
+          </div>
+          <a href="/stay/{{ a.id }}" class="btn-book {% if a.villa %}villa-btn{% endif %}">Book Now →</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div style="text-align:center;margin-top:36px">
+    <a href="/accommodations" class="btn-primary">Browse All Stays →</a>
+  </div>
+</div>
+</div>
+
+<!-- TRIBAL / VILLAS -->
+<div id="tribal" class="tribal-bg">
+<div class="tribal-inner">
+  <div class="tribal-text">
+    <span class="section-label" style="color:rgba(201,168,76,.8)">✦ Community Tourism</span>
+    <h2 class="section-title" style="color:white">Support <em style="color:var(--gold)">Villa</em> Livelihoods</h2>
+    <p class="section-desc" style="color:rgba(255,255,255,.6);max-width:100%">The Kani, Muduvar, and Kadar tribes have called these forests home for millennia. Choosing a villa stay isn't just travel — it's solidarity.</p>
+    <div class="tribal-points">
+      <div class="tribal-point">
+        <span class="tribal-point-icon">💰</span>
+        <div class="tribal-point-text"><h4>Direct Income</h4><p>100% of your booking goes directly to the tribal household — no middlemen, no agencies.</p></div>
+      </div>
+      <div class="tribal-point">
+        <span class="tribal-point-icon">🌿</span>
+        <div class="tribal-point-text"><h4>Forest Wisdom</h4><p>Guided herbal forest walks and traditional medicine knowledge passed down for generations.</p></div>
+      </div>
+      <div class="tribal-point">
+        <span class="tribal-point-icon">🎭</span>
+        <div class="tribal-point-text"><h4>Living Culture</h4><p>Folk dance, oral history, and craft workshops — not a performance, but everyday life shared.</p></div>
+      </div>
+    </div>
+    <div style="margin-top:28px"><a href="/villas" class="btn-primary">Explore Villas →</a></div>
+  </div>
+  <div class="tribal-cards">
+    <div class="tribal-mini-card"><span class="tribal-mini-icon">🏹</span><div><div class="tribal-mini-title">Kani Forest Villa</div><div class="tribal-mini-desc">Deep forest homestay · Organic meals · Herb walks · ₹1,400/night</div></div></div>
+    <div class="tribal-mini-card"><span class="tribal-mini-icon">🎋</span><div><div class="tribal-mini-title">Bamboo Village Resort</div><div class="tribal-mini-desc">Muduvar community · Folk dance evenings · ₹2,400/night</div></div></div>
+    <div class="tribal-mini-card"><span class="tribal-mini-icon">🌺</span><div><div class="tribal-mini-title">Kadar Forest Camp</div><div class="tribal-mini-desc">Overnight camp with Kadar tribe guides · ₹1,800/night</div></div></div>
+    <div class="tribal-mini-card"><span class="tribal-mini-icon">🍯</span><div><div class="tribal-mini-title">Honey Village Retreat</div><div class="tribal-mini-desc">Wild honey harvesting with beekeeping families · ₹1,600/night</div></div></div>
+  </div>
+</div>
+</div>
+
+<!-- TRAVEL TIPS -->
+<div id="tips" class="tips-bg">
+<div class="tips-inner">
+  <div class="section-header">
+    <span class="section-label" style="color:var(--teal-light)">✦ Before You Go</span>
+    <h2 class="section-title" style="color:white">Traveller's <em style="color:var(--teal-light)">Guide</em></h2>
+    <p class="section-desc" style="color:rgba(255,255,255,.65)">Everything you need to plan a seamless Kanyakumari trip.</p>
+  </div>
+  <div class="tips-grid">
+    {% for t in travel_tips %}
+    <div class="tip-card">
+      <div class="tip-icon">{{ t.icon }}</div>
+      <div class="tip-title">{{ t.title }}</div>
+      <div class="tip-text">{{ t.tip }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Nav active on scroll
+  const sections = ['attractions','accommodations','tribal','tips'];
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll('.nav-links a').forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href').includes(entry.target.id));
+        });
+      }
+    });
+  }, {threshold: 0.4});
+  sections.forEach(id => { const el = document.getElementById(id); if(el) observer.observe(el); });
+</script>
+{% endblock %}

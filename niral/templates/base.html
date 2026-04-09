@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Kanyakumari Tourism{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <span class="nav-logo-main">Kanyakumari</span>
+    <span class="nav-logo-sub">Tourism Portal</span>
+  </a>
+  <div class="nav-links">
+    <a href="/#attractions">Attractions</a>
+    <a href="/#accommodations">Stay</a>
+    <a href="/villas">Villas</a>
+    <a href="/#tips">Travel Tips</a>
+  </div>
+  <a href="/accommodations" class="nav-book">Book Now</a>
+</nav>
+
+{% block content %}{% endblock %}
+
+<footer>
+  <span class="footer-logo">Kanyakumari</span>
+  <hr class="footer-divider">
+  <p><strong>Tamil Nadu's Southernmost Tourism Portal</strong></p>
+  <p style="margin-top:6px">Supporting communities &middot; Preserving heritage &middot; Sustainable travel</p>
+  <p style="margin-top:14px;font-size:.7rem;opacity:.35;letter-spacing:1px">BUILT WITH PYTHON · FLASK · OPENSTREETMAP</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

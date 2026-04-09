@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Attractions — Kanyakumari Tourism{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <h1>🗺️ All Attractions</h1>
+  <p>Discover {{ attractions|length }} verified destinations across Kanyakumari</p>
+</div>
+
+<div class="section">
+  <div class="filter-bar">
+    {% for c in categories %}
+    <a href="/attractions?cat={{ c }}" class="filter-btn {% if c == selected_cat %}active{% endif %}">{{ c }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="cards-grid">
+    {% set color_map = {
+      "Heritage & Spiritual": "linear-gradient(135deg,#1a4a6b,#1a9a8e)",
+      "Monument":             "linear-gradient(135deg,#3d2b1f,#8b6914)",
+      "Nature":               "linear-gradient(135deg,#1a3a1a,#4a7c42)",
+      "Engineering & Nature": "linear-gradient(135deg,#1a2a4a,#2d6a8e)",
+      "Heritage":             "linear-gradient(135deg,#4a2a1a,#8b6914)",
+      "Nature & Wildlife":    "linear-gradient(135deg,#1a3a1a,#1a9a8e)",
+      "Tribal & Heritage":    "linear-gradient(135deg,#3d2010,#5c7a3a)"
+    } %}
+    {% for a in attractions %}
+    {% set bg = color_map.get(a.category, "linear-gradient(135deg,#0a3d52,#1a9a8e)") %}
+    <a href="/attraction/{{ a.id }}" class="card" style="display:block">
+      <div class="card-icon-banner" style="{% if a.image %}background: url('{{ a.image }}') {{ a.get('image_pos', 'center') }}/cover;{% else %}background:{{ bg }};{% endif %}position:relative;">
+        {% if not a.image %}<span style="font-size:3.5rem">{{ a.icon }}</span>{% endif %}
+        <span style="position:absolute;bottom:10px;right:12px;background:rgba(255,255,255,.2);color:white;font-size:.7rem;padding:3px 10px;border-radius:12px;backdrop-filter:blur(4px)">View Map & Stays →</span>
+      </div>
+      <div class="card-body">
+        <div class="card-category">{{ a.category }}</div>
+        <div class="card-title">{{ a.name }}</div>
+        <div class="card-desc">{{ a.description }}</div>
+        <div class="card-meta" style="margin-bottom:10px">
+          <span class="meta-tag">⏰ {{ a.timings }}</span>
+          <span class="meta-tag">🌤 {{ a.best_season }}</span>
+        </div>
+        <div class="card-meta">
+          {% if a.entry_fee == 0 %}
+          <span class="meta-tag free">Free Entry</span>
+          {% else %}
+          <span class="meta-tag">₹{{ a.entry_fee }} Entry</span>
+          {% endif %}
+          {% for t in a.tags[:3] %}<span class="meta-tag">#{{ t }}</span>{% endfor %}
+          <span class="rating">⭐ {{ a.rating }}</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

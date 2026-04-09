@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Accommodations — Kanyakumari Tourism{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <h1>🏡 Find Your Stay</h1>
+  <p>{{ accommodations|length }} verified stays — Hotels, Homestays, Eco Villas</p>
+</div>
+
+<div class="section">
+  <div class="filter-bar">
+    {% for t in types %}
+    <a href="/accommodations?type={{ t }}" class="filter-btn {% if t == selected_type %}active{% endif %}">{{ t }}</a>
+    {% endfor %}
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:22px">
+    {% for a in accommodations %}
+    {% set stars_str = "★" * a.stars + "☆" * (5 - a.stars) %}
+    <div class="acc-card">
+      <div class="acc-side {% if a.villa %}villa{% endif %}">
+        {% if a.villa %}<div class="villa-badge">🌿 VILLA</div>{% endif %}
+        <div class="acc-icon">{{ a.icon }}</div>
+        <div class="acc-stars">{{ stars_str }}</div>
+      </div>
+      <div class="acc-body">
+        <div class="acc-type {% if a.villa %}villa-type{% endif %}">{{ a.type }}</div>
+        <div class="acc-name">{{ a.name }}</div>
+        <div class="acc-desc">{{ a.description }}</div>
+        <div class="amenities">
+          {% for am in a.amenities %}<span class="amenity">{{ am }}</span>{% endfor %}
+        </div>
+        <div class="acc-footer">
+          <div>
+            <div class="acc-price">₹{{ a.price|commas }}<span>/night</span></div>
+            <div class="acc-avail">✓ {{ a.available }} rooms available</div>
+          </div>
+          <a href="/stay/{{ a.id }}" class="btn-book {% if a.villa %}villa-btn{% endif %}">Book Now →</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

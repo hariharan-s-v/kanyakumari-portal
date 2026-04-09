@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block title %}{{ att.name }} — Kanyakumari Tourism{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="det-layout">
+
+  <!-- LEFT PANEL -->
+  <div class="det-left">
+
+    <div class="det-hero" {% if att.image %}style="background: linear-gradient(135deg, rgba(10,61,82,0.85), rgba(26,154,142,0.85)), url('{{ att.image }}') {{ att.get('image_pos', 'center') }}/cover"{% endif %}>
+      <a href="/attractions" class="det-back">← Back to all Attractions</a>
+      <div class="det-icon-row">
+        {% if not att.image %}<span class="det-big-icon">{{ att.icon }}</span>{% endif %}
+        <span class="det-cat-badge">{{ att.category }}</span>
+      </div>
+      <h1 class="det-title">{{ att.name }}</h1>
+      <div class="det-rating-row">
+        <span class="det-stars">{{ rating_stars }}</span>
+        <span class="det-rating-num">{{ att.rating }}/5</span>
+        <span class="det-meta-pill">⏰ {{ att.timings }}</span>
+        <span class="det-meta-pill">🌤 Best: {{ att.best_season }}</span>
+      </div>
+      <p class="det-desc">{{ att.description }}</p>
+      <div class="det-tags">
+        {% for t in att.tags %}<span class="det-tag">#{{ t }}</span>{% endfor %}
+      </div>
+    </div>
+
+    <div class="det-info-grid">
+      <div class="det-info-cell">
+        <div class="det-info-label">Entry Fee</div>
+        <div class="det-info-val {% if att.entry_fee == 0 %}free{% endif %}">{{ fee_str }}</div>
+      </div>
+      <div class="det-info-cell">
+        <div class="det-info-label">Best Season</div>
+        <div class="det-info-val">{{ att.best_season }}</div>
+      </div>
+      <div class="det-info-cell">
+        <div class="det-info-label">Rating</div>
+        <div class="det-info-val">⭐ {{ att.rating }} / 5</div>
+      </div>
+    </div>
+
+    <div class="det-tabs">
+      <div class="det-tab active" onclick="switchTab('map',this)">🗺️ Map & Directions</div>
+      <div class="det-tab" onclick="switchTab('nearby',this)">🏡 Nearby Stays</div>
+      <div class="det-tab" onclick="switchTab('reach',this)">🚌 How to Reach</div>
+    </div>
+
+    <!-- MAP TAB -->
+    <div class="tab-panel active" id="tab-map">
+      <div class="map-controls">
+        <button class="map-ctrl-btn active" onclick="showLayer('all',this)">All Places</button>
+        <button class="map-ctrl-btn" onclick="showLayer('heritage',this)">Heritage</button>
+        <button class="map-ctrl-btn" onclick="showLayer('nature',this)">Nature</button>
+        <button class="map-ctrl-btn" onclick="showLayer('stays',this)">Stays</button>
+      </div>
+      <div id="map"></div>
+      <div class="directions-box">
+        <div class="directions-title">📍 Directions to {{ att.name }}</div>
+        <div class="dir-row"><span class="dir-icon">🚂</span><div class="dir-text"><strong>By Train:</strong> Kanyakumari Railway Station (KZT) is nearest. Auto-rickshaw ~15 min (Rs.60–100).</div></div>
+        <div class="dir-row"><span class="dir-icon">✈️</span><div class="dir-text"><strong>By Air:</strong> Trivandrum Airport (TRV) — 87 km. Taxi Rs.1,200–1,500, ~2 hrs.</div></div>
+        <div class="dir-row"><span class="dir-icon">🚌</span><div class="dir-text"><strong>By Bus:</strong> TNSTC/KSRTC from Madurai (4 hrs), Chennai (14 hrs), Trivandrum (1.5 hrs).</div></div>
+        <div class="dir-row"><span class="dir-icon">🚗</span><div class="dir-text"><strong>By Road:</strong> NH-44 ends at Kanyakumari. NH-66 coastal route from Kerala side.</div></div>
+        <a href="https://www.google.com/maps/dir/?api=1&destination={{ att.lat }},{{ att.lng }}" target="_blank" class="gmaps-btn">
+          📍 Open in Google Maps
+        </a>
+      </div>
+    </div>
+
+    <!-- NEARBY STAYS TAB -->
+    <div class="tab-panel" id="tab-nearby">
+      <div class="stay-filter-row">
+        <button class="stay-filter-btn active" onclick="filterNearby('all',this)">All Stays</button>
+        <button class="stay-filter-btn" onclick="filterNearby('hotel',this)">Hotels</button>
+        <button class="stay-filter-btn" onclick="filterNearby('villa',this)">Villa</button>
+        <button class="stay-filter-btn" onclick="filterNearby('eco',this)">Eco</button>
+        <button class="stay-filter-btn" onclick="filterNearby('budget',this)">Budget</button>
+      </div>
+      <div id="nearby-stays-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
+    </div>
+
+    <!-- HOW TO REACH TAB -->
+    <div class="tab-panel" id="tab-reach">
+      <div class="reach-grid">
+        <div class="reach-card"><div class="reach-icon">🚂</div><div class="reach-mode">By Train</div><div class="reach-detail"><strong>Kanyakumari Station (KZT)</strong> — connected to Chennai, Mumbai, Delhi. Auto from station: Rs.60–100.</div></div>
+        <div class="reach-card"><div class="reach-icon">✈️</div><div class="reach-mode">By Flight</div><div class="reach-detail"><strong>Trivandrum Airport (TRV)</strong> — 87 km, ~2 hours. Cabs Rs.1,200–1,500.</div></div>
+        <div class="reach-card"><div class="reach-icon">🚌</div><div class="reach-mode">By Bus</div><div class="reach-detail"><strong>TNSTC & KSRTC</strong> — From Madurai (4 hrs), Chennai (14 hrs), Trivandrum (1.5 hrs).</div></div>
+        <div class="reach-card"><div class="reach-icon">🚗</div><div class="reach-mode">By Road</div><div class="reach-detail"><strong>NH-44 ends here</strong> — drive the length of India! NH-66 from Kerala side.</div></div>
+        <div class="reach-card"><div class="reach-icon">⛴️</div><div class="reach-mode">By Ferry</div><div class="reach-detail"><strong>Kanyakumari Jetty</strong> — Ferries to Rock Memorial 8 AM–4 PM. Tickets Rs.50 return.</div></div>
+        <div class="reach-card"><div class="reach-icon">🛺</div><div class="reach-mode">Local Transport</div><div class="reach-detail"><strong>Auto-rickshaws</strong> cover all spots. Day-hire Rs.400–600 for all attractions.</div></div>
+      </div>
+    </div>
+
+  </div><!-- end det-left -->
+
+  <!-- RIGHT — SIDEBAR -->
+  <div class="det-right">
+    <div class="sidebar-header">
+      <h3>🏡 Book Your Stay</h3>
+      <p>{{ accommodations|length }} verified accommodations</p>
+      <input class="sidebar-search" type="text" placeholder="Search stays..." oninput="searchAccommodations(this.value)">
+    </div>
+    <div class="sidebar-acc-list" id="sidebar-acc-list">
+      {% for a in accommodations %}
+      {% set stars_str = "★" * a.stars + "☆" * (5 - a.stars) %}
+      <div class="mini-acc-card" id="acc-card-{{ a.id }}">
+        <div class="mini-acc-icon">{{ a.icon }}</div>
+        <div class="mini-acc-body">
+          <div class="mini-acc-top">
+            <span class="mini-acc-type">{{ a.type }}</span>
+            {% if a.villa %}<span class="mini-tribal-badge">VILLA</span>{% endif %}
+          </div>
+          <div class="mini-acc-name">{{ a.name }}</div>
+          <div class="mini-acc-stars">{{ stars_str }}</div>
+          <div class="mini-acc-footer">
+            <span class="mini-acc-price">Rs.{{ a.price|commas }}<small>/night</small></span>
+            <a href="/stay/{{ a.id }}" class="mini-btn-book {% if a.villa %}villa-btn{% endif %}">Book</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div><!-- end det-layout -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const ATT_LAT = {{ att.lat }};
+  const ATT_LNG = {{ att.lng }};
+  const ATT_NAME = {{ att.name | tojson }};
+  const ATT_ICON = {{ att.icon | tojson }};
+  const OTHER_MARKERS = {{ markers_json | safe }};
+  const ALL_ACCOMMODATIONS = {{ all_acc_json | safe }};
+
+  let map, allMarkers = [], allAccMarkers = [];
+
+  function initMap() {
+    map = L.map('map').setView([ATT_LAT, ATT_LNG], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 18
+    }).addTo(map);
+
+    const mainIcon = L.divIcon({
+      html: `<div style="background:#0d5c78;border:3px solid #d4a843;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;box-shadow:0 4px 16px rgba(0,0,0,.35)">${ATT_ICON}</div>`,
+      className:'', iconSize:[52,52], iconAnchor:[26,26]
+    });
+    L.marker([ATT_LAT, ATT_LNG], {icon: mainIcon}).addTo(map)
+      .bindPopup(`<b>${ATT_NAME}</b><br><a href="https://www.google.com/maps/dir/?api=1&destination=${ATT_LAT},${ATT_LNG}" target="_blank" style="color:#0d5c78;font-weight:600">Get Directions →</a>`)
+      .openPopup();
+
+    OTHER_MARKERS.forEach(m => {
+      const icon = L.divIcon({
+        html: `<div style="background:rgba(26,154,142,.88);border:2px solid white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 2px 8px rgba(0,0,0,.25)">${m.icon}</div>`,
+        className:'', iconSize:[38,38], iconAnchor:[19,19]
+      });
+      const mk = L.marker([m.lat, m.lng], {icon})
+        .bindPopup(`<b>${m.name}</b><br><span style="color:#6b7a8d;font-size:.85em">${m.cat}</span><br><a href="/attraction/${m.id}" style="color:#0d5c78;font-weight:600">View Details →</a>`);
+      mk._category = m.cat.toLowerCase();
+      mk._type = 'attraction';
+      allMarkers.push(mk);
+      mk.addTo(map);
+    });
+
+    ALL_ACCOMMODATIONS.forEach((a, i) => {
+      const offset = (i * 0.008) % 0.06;
+      const accIcon = L.divIcon({
+        html: `<div style="background:${a.villa ? '#8b4513' : '#2d5a27'};border:2px solid white;border-radius:6px;padding:4px 8px;font-size:.7rem;font-weight:700;color:white;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25)">${a.icon} Rs.${a.price.toLocaleString()}</div>`,
+        className:'', iconAnchor:[0,0]
+      });
+      const mk = L.marker([ATT_LAT + offset - 0.03, ATT_LNG + offset - 0.025], {icon: accIcon})
+        .bindPopup(`<b>${a.name}</b><br><span style="color:#6b7a8d;font-size:.82em">${a.type}</span><br><a href="/stay/${a.id}" style="background:#0d5c78;color:white;padding:4px 12px;border-radius:4px;font-size:.82em;font-weight:600;display:inline-block;margin-top:6px">Book Now</a>`);
+      mk._type = 'stay';
+      allAccMarkers.push(mk);
+      mk.addTo(map);
+    });
+  }
+
+  function showLayer(layer, btn) {
+    document.querySelectorAll('.map-ctrl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    allMarkers.forEach(m => {
+      if (layer === 'all') map.addLayer(m);
+      else if (layer === 'stays') map.removeLayer(m);
+      else if (m._category.includes(layer)) map.addLayer(m);
+      else map.removeLayer(m);
+    });
+    allAccMarkers.forEach(m => {
+      (layer === 'all' || layer === 'stays') ? map.addLayer(m) : map.removeLayer(m);
+    });
+  }
+
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.det-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    el.classList.add('active');
+    if (name === 'map') setTimeout(() => map && map.invalidateSize(), 100);
+  }
+
+  function renderNearby(filter) {
+    const grid = document.getElementById('nearby-stays-grid');
+    let stays = ALL_ACCOMMODATIONS;
+    if (filter === 'hotel') stays = stays.filter(a => a.type.toLowerCase().includes('hotel'));
+    else if (filter === 'villa') stays = stays.filter(a => a.villa);
+    else if (filter === 'eco') stays = stays.filter(a => a.type.toLowerCase().includes('eco') || a.type.toLowerCase().includes('cottage'));
+    else if (filter === 'budget') stays = stays.filter(a => a.price < 2000);
+    grid.innerHTML = stays.map(a => {
+      const stars = '★'.repeat(a.stars) + '☆'.repeat(5 - a.stars);
+      const btn = a.villa ? '#8b4513' : '#0d5c78';
+      const badge = a.villa ? '<span style="background:#8b4513;color:white;font-size:.62rem;padding:2px 7px;border-radius:3px;font-weight:700;margin-left:6px">VILLA</span>' : '';
+      return `<div class="reach-card" style="cursor:pointer">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="font-size:2.2rem">${a.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:#1a9a8e;font-weight:600">${a.type}${badge}</div>
+            <div style="font-weight:700;color:#12202b;margin:3px 0;font-size:.92rem">${a.name}</div>
+            <div style="color:#d4a843;font-size:.82rem">${stars}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+              <span style="font-size:1.1rem;color:#0d5c78;font-weight:600">Rs.${a.price.toLocaleString()}<small style="font-size:.7rem;color:#6b7a8d;font-weight:400">/night</small></span>
+              <a href="/stay/${a.id}" style="background:${btn};color:white;padding:7px 16px;border-radius:5px;font-size:.8rem;font-weight:600">Book</a>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function filterNearby(type, btn) {
+    document.querySelectorAll('.stay-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderNearby(type);
+  }
+
+  function searchAccommodations(q) {
+    const term = q.toLowerCase();
+    document.querySelectorAll('.mini-acc-card').forEach(card => {
+      card.style.display = card.innerText.toLowerCase().includes(term) ? 'flex' : 'none';
+    });
+  }
+
+  window.addEventListener('load', () => { initMap(); renderNearby('all'); });
+</script>
+{% endblock %}
