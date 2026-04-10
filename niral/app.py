@@ -4,7 +4,7 @@ Run: python app.py
 Open: http://localhost:5000
 """
 
-from flask import Flask, render_template, request, redirect, jsonify
+from niral.data import ATTRACTIONS, ACCOMMODATIONS, TRAVEL_TIPS
 from datetime import datetime
 import uuid
 import json
